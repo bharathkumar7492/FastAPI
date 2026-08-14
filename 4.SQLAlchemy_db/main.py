@@ -1,6 +1,7 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Response, status, HTTPException
+# FastAPI - create the API, Response - control the HTTP response
+# status - use HTTP status codes, HTTPException - return API errors
 from fastapi.params import Body
-# Import randrange to generate a random number
 from random import randrange
 
 from schemas import Post
@@ -9,13 +10,12 @@ from schemas import Post
 
 app = FastAPI()
 
-# Store all posts in a list (temp memory)
+# temp storage
 my_posts = [{"title": "title of post 1", "content": "content of post 1", "id": 1},
             {"title": "favorite food", "content": "I like biriyani", "id": 2}]
 
 
 # GET POSTS
-
 
 @app.get("/")
 def root():
@@ -27,13 +27,13 @@ def get_posts():
 
 
 # GET LATEST POST 
-# (to practice path order matter)
 
 #  Get the latest post from the list
 @app.get("/posts/latest")
 def get_latest_post():
     post = my_posts[len(my_posts) - 1]
     return post
+
 
 
 # GET SPECIFIC POST
@@ -45,29 +45,39 @@ def find_post(id):
             return post
 
 # Get a specific post using its ID
+
+# Set the response status code manually
 @app.get("/posts/{id}")
-def get_post(id: int): # data validation, that send fro path
-    # Find the post using the given ID
+def get_post(id: int, response: Response): 
     post = find_post(id)
-    print(post)
+    # if the post is not found
+    if not post:
+        # Set status code to 404 (Not Found)
+        response.status_code = status.HTTP_404_NOT_FOUND
+        # Return error message
+        return {"message": f"post with id: {id} was not found"}
     return {"post_detail": post}
 
+# or 
 
-
+# Use HTTPException to return an error response (BETTER to use)
+@app.get("/posts/{id}")
+def get_post(id: int):
+    post = find_post(id)
+    if not post:
+        # Stop the function and return 404 error
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                      detail= "post with id: {id} was not found")
+    return {"post-detail": post}
 
 
 
 # CREATE POSTS
 
 # Create a new post
-@app.post("/createPosts")
+@app.post("/createPosts", status_code=status.HTTP_201_CREATED)
 def create_posts(new_post: Post):
-    # Convert the Pydantic object into a dictionary
     post_dict = new_post.dict()
-    # Generate a random ID for the new post
     post_dict["id"] = randrange(0, 1000)
-
-    # Add the new post to the list
     my_posts.append(post_dict)
-    # Return the newly created post
     return {"data": post_dict}
