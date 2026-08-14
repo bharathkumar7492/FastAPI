@@ -9,9 +9,14 @@ def root():
     return {"message": "welcome to fastapi"}
 
 
+# Define a GET API endpoint at "/posts"
 @app.get("/posts")
+# Function to handle GET requests to the "/posts" endpoint
 def get_posts():
+    # Return a JSON response containing the posts message
     return {"data": "this is your posts"}
+
+
 
 # Define a POST API endpoint at "/createPosts"
 @app.post("/createPosts")
