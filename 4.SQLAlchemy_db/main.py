@@ -26,6 +26,7 @@ def get_posts():
     return {"data": my_posts}
 
 
+
 # GET LATEST POST 
 
 #  Get the latest post from the list
@@ -45,22 +46,6 @@ def find_post(id):
             return post
 
 # Get a specific post using its ID
-
-# Set the response status code manually
-@app.get("/posts/{id}")
-def get_post(id: int, response: Response): 
-    post = find_post(id)
-    # if the post is not found
-    if not post:
-        # Set status code to 404 (Not Found)
-        response.status_code = status.HTTP_404_NOT_FOUND
-        # Return error message
-        return {"message": f"post with id: {id} was not found"}
-    return {"post_detail": post}
-
-# or 
-
-# Use HTTPException to return an error response (BETTER to use)
 @app.get("/posts/{id}")
 def get_post(id: int):
     post = find_post(id)
@@ -72,6 +57,7 @@ def get_post(id: int):
 
 
 
+
 # CREATE POSTS
 
 # Create a new post
@@ -80,4 +66,58 @@ def create_posts(new_post: Post):
     post_dict = new_post.dict()
     post_dict["id"] = randrange(0, 1000)
     my_posts.append(post_dict)
+    return {"data": post_dict}
+
+
+
+
+# DELETE POSTS
+
+# Find the index of a post using its ID
+def find_index_post(id):
+    # Go through the list with index and post  
+    for index, post in enumerate(my_posts):
+        # Check if the post ID matches & return that post index
+        if post["id"] == id:
+            return index
+
+# Delete a post using its ID
+@app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_post(id: int):
+    # Find the index of the post with the given ID
+    index = find_index_post(id)
+    
+    # If post does not exist -  Return 404 Not Found error
+    if index == None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"post with id: {id} does not exist")
+    
+    # Remove the post from the list
+    my_posts.pop(index)
+    # Return 204 No Content response
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+    
+    
+    
+# UPDATE POST
+
+@app.put("/posts/{id}")
+def update_post(id: int, post: Post):
+    # Find the index of the post with the given ID
+    index = find_index_post(id)   
+
+    # If post does not exist -  Return 404 Not Found error
+    if index == None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"post with id: {id} does not exist" )
+        
+    # Convert the Pydantic 'post' object into a normal Python dictionary
+    post_dict = post.dict()    
+    
+    # Add the ID from the URL to the new post data
+    # Example: PUT /posts/1 → id = 1
+    post_dict["id"] = id
+    # Replace the old post with the new post at the same index
+    my_posts[index] = post_dict
+    # Return the updated post as the response
     return {"data": post_dict}
