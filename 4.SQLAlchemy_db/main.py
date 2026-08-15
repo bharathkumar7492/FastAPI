@@ -116,8 +116,11 @@ def update_post(id: int, post: Post):
     
     # Add the ID from the URL to the new post data
     # Example: PUT /posts/1 → id = 1
-    post_dict["id"] = id
+    post_dict["id"] = id         
+   # why put id: because the request body contains only the new post data, usually without the ID.
+            
     # Replace the old post with the new post at the same index
     my_posts[index] = post_dict
+            
     # Return the updated post as the response
     return {"data": post_dict}
