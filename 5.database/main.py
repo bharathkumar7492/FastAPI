@@ -1,12 +1,21 @@
-from fastapi import FastAPI, Response, status, HTTPException
-# FastAPI - create the API, Response - control the HTTP response
-# status - use HTTP status codes, HTTPException - return API errors
+from fastapi import FastAPI, Response, status, HTTPException, Depends
 from fastapi.params import Body
 from random import randrange
 
 from schemas import Post
 from database import cursor, connection
 
+# Import the models so SQLAlchemy knows about our database tables
+import models
+from database import engine, get_db
+# Import Session to work with the SQLAlchemy database session
+from sqlalchemy.orm import Session 
+
+
+# Create the tables in the database if they do not already exist
+models.Base.metadata.create_all(bind=engine)
+# models = What tables look like, Base = Connect models to SQLAlchemy, metadata=Knows table structure
+# engine = Connect to database,create_all() = Create the tables
 
 
 app = FastAPI()
@@ -16,6 +25,17 @@ my_posts = [{"title": "title of post 1", "content": "content of post 1", "id": 1
             {"title": "favorite food", "content": "I like biriyani", "id": 2}]
 
 
+# Test endpoint to check whether SQLAlchemy database setup is working
+@app.get("/sqlalchemy")
+             # FastAPI gets a database session from get_db()
+def test_post(db: Session=Depends(get_db)):
+    posts = db.query(models.Post).all()
+    print(posts)
+    return {"data": posts}
+    
+
+
+# --------
 # GET POSTS
 
 @app.get("/")
@@ -25,45 +45,33 @@ def root():
 
 # GET endpoint to fetch all posts from the database
 @app.get("/posts")
-def get_posts():
-    
-    # Execute SQL query to get all posts from the posts table
-    cursor.execute("""SELECT * FROM posts""")
-    # Get all rows returned by the SQL query
-    posts = cursor.fetchall()
+              # FastAPI gets a database session from get_db()
+def get_posts(db: Session=Depends(get_db)):
+    # cursor.execute("""SELECT * FROM posts""")
+    # posts = cursor.fetchall()
+
+
+    # Query the Post table and get all posts
+    posts = db.query(models.Post).all()
     # Return all posts as the API response
     return {"data": posts}
 
 
 
-# GET LATEST POST 
-
-#  Get the latest post from the list
-@app.get("/posts/latest")
-def get_latest_post():
-    post = my_posts[len(my_posts) - 1]
-    return post
-
 
 
 # GET SPECIFIC POST
 
-# Find a post using its ID
-def find_post(id):
-    for post in my_posts:
-        if post["id"] == id:
-            return post
-
-
 # Get a specific post using its ID
 @app.get("/posts/{id}")
-def get_post(id: int):
+def get_post(id: int, db: Session=Depends(get_db)):
+    # cursor.execute(""" SELECT * FROM posts WHERE id = %s """, (str(id)))
+    # post = cursor.fetchone()
     
-    # Find the post in the database using query with given ID
-    cursor.execute(""" SELECT * FROM posts WHERE id = %s """, (str(id)))
-    # Get the matching post returned by the SQL query
-    post = cursor.fetchone()
-    print(post)
+    
+    # Find the post with the given ID in the database
+    post = db.query(models.Post).filter(models.Post.id == id).first()
+    
     if not post:
         # Stop the function and return 404 error
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -77,17 +85,29 @@ def get_post(id: int):
 
 # Create a new post
 @app.post("/createPosts", status_code=status.HTTP_201_CREATED)
-def create_posts(post: Post):
+def create_posts(post: Post, db: Session=Depends(get_db)):
+    # cursor.execute(""" INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) """,
+    #               (post.title, post.content, post.published))
+    # new_post = cursor.fetchone()
+    # connection.commit()
     
-    # Insert the post data into the posts table
-    cursor.execute(""" INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) """,
-                   # Pass the values safely to the SQL query
-                  (post.title, post.content, post.published))
     
-    # Get the newly created post
-    new_post = cursor.fetchone()
-    # Save the changes permanently in the database
-    connection.commit()
+    
+    # # Create a SQLAlchemy Post object using the received data
+    # new_post = models.Post(title=post.title, content=post.content, published=post.published)
+
+    # If the model has many fields(columns), use unpacking to avoid writing each field manually
+    # Convert Pydantic model to dictionary 
+    new_post = models.Post(**post.dict())
+    
+    # Add the new post to the database session
+    db.add(new_post)
+    # Save the new post permanently in the database
+    db.commit()
+    # Get the newly created post data from the database
+    db.refresh(new_post)
+    
+    
     # Return the created post to the client
     return {"data": new_post}
 
@@ -96,26 +116,28 @@ def create_posts(post: Post):
 
 # DELETE POSTS
 
-# Find the index of a post using its ID
-def find_index_post(id):
-    for index, post in enumerate(my_posts):
-        if post["id"] == id:
-            return index
-
 # Delete a post using its ID
 @app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(id: int):
+def delete_post(id: int, db: Session=Depends(get_db)):
+    # cursor.execute(""" DELETE FROM posts WHERE id = %s """, (str(id),))
+    # deleted_post = cursor.fetchone()
+    # connection.commit()
     
-    # Delete the post from the database using query with given ID
-    cursor.execute(""" DELETE FROM posts WHERE id = %s """, (str(id),))
-    # Get the deleted post
-    deleted_post = cursor.fetchone()
-    # Save the delete operation permanently in the database
-    connection.commit()
     
-    if deleted_post == None:
+    
+    #  Find the post with the given ID
+    post = db.query(models.Post).filter(models.Post.id == id)
+    
+    # Check if the post exists, if not return 404 error message
+    if post.first() == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"post with id: {id} does not exist")
+        
+    # Delete the matching post from the database
+    post.delete(synchronize_session=False)
+    
+    # Save the delete operation permanently in the database
+    db.commit()
     
     # Return 204 No Content response
     return Response(status_code=status.HTTP_204_NO_CONTENT)
@@ -127,21 +149,31 @@ def delete_post(id: int):
 
 # PUT endpoint to update an existing post using its ID
 @app.put("/posts/{id}")
-def update_post(id: int, post: Post):
+def update_post(id: int, updated_post: Post, db: Session=Depends(get_db)):
+    # cursor.execute("""
+    #                UPDATE posts
+    #                SET title = %s, content = %s, published = %s
+    #                WHERE id = %s""",
+    #                (post.title, post.content, post.published, str(id)))
+    # updated_post = cursor.fetchone()
+    # connection.commit()
     
-    # Update the post using query  WHERE id = %s ensures only the post with the given ID is updated
-    cursor.execute("""
-                   UPDATE posts
-                   SET title = %s, content = %s, published = %s
-                   WHERE id = %s""",
-                   (post.title, post.content, post.published, str(id)))
-    # Get the updated post
-    updated_post = cursor.fetchone()
-    # Save the update permanently in the database
-    connection.commit()
     
-    if updated_post == None:
+    
+    
+    # Find the post with the given ID
+    post_query = db.query(models.Post).filter(models.Post.id == id)
+    
+    # Get the first matching post
+    post = post_query.first()
+    
+    if post == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"post with id: {id} does not exist" )
+    
+    # Update the post using the data received from the client
+    post_query.update(updated_post.dict(), synchronize_session=False)
+    # Save the changes permanently in the database
+    db.commit()
         
-    return {"data": updated_post}
+    return {"data": post_query.first()}
