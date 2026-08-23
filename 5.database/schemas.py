@@ -4,7 +4,11 @@ from typing import Optional
 
 
 # Create a Pydantic model/schema for a Post
-class Post(BaseModel):
+class PostBase(BaseModel):
     title: str             
     content: str            
     published: bool=True    
+
+
+class CreatePost(PostBase):
+    pass

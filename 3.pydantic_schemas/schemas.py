@@ -1,3 +1,5 @@
+# pydantic schemas/models = Validates request data
+
 # Import BaseModel from Pydantic to create data validation schemas
 from pydantic import BaseModel
 # Import Optional to make a field optional

@@ -2,10 +2,9 @@ from fastapi import FastAPI, Response, status, HTTPException, Depends
 from fastapi.params import Body
 from random import randrange
 
-from schemas import PostBase, CreatePost
+from schemas import PostBase, CreatePost, PostResponse
 from database import cursor, connection
 
-# Import the models so SQLAlchemy knows about our database tables
 import models
 from database import engine, get_db
 # Import Session to work with the SQLAlchemy database session
@@ -14,8 +13,6 @@ from sqlalchemy.orm import Session
 
 # Create the tables in the database if they do not already exist
 models.Base.metadata.create_all(bind=engine)
-# models = What tables look like, Base = Connect models to SQLAlchemy, metadata=Knows table structure
-# engine = Connect to database,create_all() = Create the tables
 
 
 app = FastAPI()
@@ -35,7 +32,8 @@ def root():
 
 
 # GET endpoint to fetch all posts from the database
-@app.get("/posts")
+# If want to return multiple posts use -'list[]' in response_model
+@app.get("/posts", response_model=list[PostResponse])
               # FastAPI gets a database session from get_db()
 def get_posts(db: Session=Depends(get_db)):
     # cursor.execute("""SELECT * FROM posts""")
@@ -45,7 +43,7 @@ def get_posts(db: Session=Depends(get_db)):
     # Query the Post table and get all posts
     posts = db.query(models.Post).all()
     # Return all posts as the API response
-    return {"data": posts}
+    return posts
 
 
 
@@ -54,7 +52,7 @@ def get_posts(db: Session=Depends(get_db)):
 # GET SPECIFIC POST
 
 # Get a specific post using its ID
-@app.get("/posts/{id}")
+@app.get("/posts/{id}", response_model=PostResponse)
 def get_post(id: int, db: Session=Depends(get_db)):
     # cursor.execute(""" SELECT * FROM posts WHERE id = %s """, (str(id)))
     # post = cursor.fetchone()
@@ -67,7 +65,7 @@ def get_post(id: int, db: Session=Depends(get_db)):
         # Stop the function and return 404 error
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                       detail= "post with id: {id} was not found")
-    return {"post-detail": post}
+    return post
 
 
 
@@ -75,7 +73,7 @@ def get_post(id: int, db: Session=Depends(get_db)):
 # CREATE POSTS
 
 # Create a new post
-@app.post("/createPosts", status_code=status.HTTP_201_CREATED)
+@app.post("/createPosts", status_code=status.HTTP_201_CREATED, response_model=PostResponse)
 def create_posts(post: CreatePost, db: Session=Depends(get_db)):
     # cursor.execute(""" INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) """,
     #               (post.title, post.content, post.published))
@@ -100,7 +98,7 @@ def create_posts(post: CreatePost, db: Session=Depends(get_db)):
     
     
     # Return the created post to the client
-    return {"data": new_post}
+    return new_post
 
 
 
@@ -139,7 +137,7 @@ def delete_post(id: int, db: Session=Depends(get_db)):
 # UPDATE POST
 
 # PUT endpoint to update an existing post using its ID
-@app.put("/posts/{id}")
+@app.put("/posts/{id}", response_model=PostResponse)
 def update_post(id: int, updated_post: CreatePost, db: Session=Depends(get_db)):
     # cursor.execute("""
     #                UPDATE posts
@@ -167,4 +165,4 @@ def update_post(id: int, updated_post: CreatePost, db: Session=Depends(get_db)):
     # Save the changes permanently in the database
     db.commit()
         
-    return {"data": post_query.first()}
+    return post_query.first()
