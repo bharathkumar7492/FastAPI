@@ -1,5 +1,5 @@
 # Import BaseModel from Pydantic to create data validation schemas
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import Optional
 from datetime import datetime
 
@@ -27,3 +27,21 @@ class PostResponse(PostBase):
         
         
         
+
+# USERS SCHEMAS  ----------------------
+
+#  schema used for create user
+class CreateUser(BaseModel):
+    email: EmailStr
+    password: str
+    
+
+# schema used for user response
+class UserResponse(BaseModel):
+    id: int
+    email: EmailStr
+    created_at: datetime
+    
+    # Allow Pydantic to read data from SQLAlchemy model
+    class config:
+        orm_mode = True

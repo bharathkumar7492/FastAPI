@@ -3,7 +3,6 @@ from pymysql.cursors import DictCursor
 import time
 
 
-
 # Import create_engine to create a connection between SQLAlchemy and the database
 from sqlalchemy import create_engine
 # Import sessionmaker to create database sessions
@@ -47,7 +46,6 @@ def get_db():
     finally:
         # Close the database session after the request is finished
         db.close()
-
 
 
 

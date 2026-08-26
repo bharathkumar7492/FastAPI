@@ -1,8 +1,10 @@
 from fastapi import FastAPI, Response, status, HTTPException, Depends
 from fastapi.params import Body
 from random import randrange
+# Import CryptContext to handle password hashing
+from passlib.context import CryptContext
 
-from schemas import PostBase, CreatePost, PostResponse
+from schemas import PostBase, CreatePost, PostResponse, CreateUser, UserResponse
 from database import cursor, connection
 
 import models
@@ -10,6 +12,13 @@ from database import engine, get_db
 # Import Session to work with the SQLAlchemy database session
 from sqlalchemy.orm import Session 
 
+
+
+
+
+# Create a password hashing tool using bcrypt
+password_context = CryptContext(schemes=["bcrypt"],  # Use bcrypt to hash passwords
+                           deprecated="auto")   # Automatically handle old hashing schemes
 
 # Create the tables in the database if they do not already exist
 models.Base.metadata.create_all(bind=engine)
@@ -44,8 +53,6 @@ def get_posts(db: Session=Depends(get_db)):
     posts = db.query(models.Post).all()
     # Return all posts as the API response
     return posts
-
-
 
 
 
@@ -166,3 +173,25 @@ def update_post(id: int, updated_post: CreatePost, db: Session=Depends(get_db)):
     db.commit()
         
     return post_query.first()
+
+
+
+
+
+# --------------
+# CREATE USER
+
+
+# Create a new user and return the created user
+@app.post("/users", status_code=status.HTTP_201_CREATED, response_model=UserResponse)
+def create_user(user: CreateUser, db: Session=Depends(get_db)):
+    
+    # Hash the user's plain password before storing it in the database
+    user.password  = password_context.hash(user.password)
+    
+    new_user = models.User(**user.dict())
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    
+    return new_user
