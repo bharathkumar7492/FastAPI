@@ -1,3 +1,5 @@
+# Import APIRouter to create a group of related API routes
+from fastapi import APIRouter
 from fastapi import FastAPI, Response, status, HTTPException, Depends, APIRouter
 # Import Session to work with the SQLAlchemy database session
 from sqlalchemy.orm import Session 
@@ -7,13 +9,19 @@ from database import get_db
 
 
 
-router = APIRouter()
+# Create a router with a common URL prefix and group name in Swagger docs
+router = APIRouter(
+    prefix="/posts",   # Adds /posts to all routes in this router
+    tags=["Posts"]     # Groups these routes under "Posts" in /docs
+)
 
 
+# we prefix the path here, so in every path "/posts" is automatically added  no need to mention
 
-# GET endpoint to fetch all posts from the database
-# If want to return multiple posts use -'list[]' in response_model
-@router.get("/posts", response_model=list[schemas.PostResponse])
+
+# GET ALL
+
+@router.get("/", response_model=list[schemas.PostResponse])
               # FastAPI gets a database session from get_db()
 def get_posts(db: Session=Depends(get_db)):
     # cursor.execute("""SELECT * FROM posts""")
@@ -30,7 +38,7 @@ def get_posts(db: Session=Depends(get_db)):
 # GET SPECIFIC POST
 
 # Get a specific post using its ID
-@router.get("/posts/{id}", response_model=schemas.PostResponse)
+@router.get("/{id}", response_model=schemas.PostResponse)
 def get_post(id: int, db: Session=Depends(get_db)):
     # cursor.execute(""" SELECT * FROM posts WHERE id = %s """, (str(id)))
     # post = cursor.fetchone()
@@ -51,7 +59,7 @@ def get_post(id: int, db: Session=Depends(get_db)):
 # CREATE POSTS
 
 # Create a new post
-@router.post("/createPosts", status_code=status.HTTP_201_CREATED, response_model=schemas.PostResponse)
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.PostResponse)
 def create_posts(post: schemas.CreatePost, db: Session=Depends(get_db)):
     # cursor.execute(""" INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) """,
     #               (post.title, post.content, post.published))
@@ -84,7 +92,7 @@ def create_posts(post: schemas.CreatePost, db: Session=Depends(get_db)):
 # DELETE POSTS
 
 # Delete a post using its ID
-@router.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(id: int, db: Session=Depends(get_db)):
     # cursor.execute(""" DELETE FROM posts WHERE id = %s """, (str(id),))
     # deleted_post = cursor.fetchone()
