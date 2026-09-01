@@ -3,7 +3,7 @@ from fastapi.params import Body
 
 import models
 from database import engine
-from routers import user, post
+from routers import user, post, auth
 
 
 
@@ -27,5 +27,7 @@ def root():
     return {"message": "welcome to fastapi"}
 
 
+# Register the user, post, and authentication routers with the main FastAPI app
 app.include_router(user.router)
 app.include_router(post.router)
+app.include_router(auth.router)

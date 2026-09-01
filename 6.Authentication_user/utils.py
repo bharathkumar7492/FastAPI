@@ -7,5 +7,11 @@ password_context = CryptContext(schemes=["bcrypt"],  # Use bcrypt to hash passwo
                            deprecated="auto")   # Automatically handle old hashing schemes
 
 
+# Hash the plain password before storing it in the database
 def hash(password: str):
     return password_context.hash(password)
+
+
+# Verify the entered password against the stored hashed password
+def verify(plain_password, hashed_password):
+    return password_context.verify(plain_password, hashed_password)

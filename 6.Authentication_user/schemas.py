@@ -45,3 +45,11 @@ class UserResponse(BaseModel):
     # Allow Pydantic to read data from SQLAlchemy model
     class config:
         orm_mode = True
+        
+
+# Schema for validating user login credentials
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+    
