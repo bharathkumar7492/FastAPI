@@ -4,7 +4,7 @@ from fastapi import FastAPI, Response, status, HTTPException, Depends, APIRouter
 # Import Session to work with the SQLAlchemy database session
 from sqlalchemy.orm import Session 
 
-import models, schemas
+import models, schemas, oauth2
 from database import get_db
 
 
@@ -60,7 +60,7 @@ def get_post(id: int, db: Session=Depends(get_db)):
 
 # Create a new post
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.PostResponse)
-def create_posts(post: schemas.CreatePost, db: Session=Depends(get_db)):
+def create_posts(post: schemas.CreatePost, db: Session=Depends(get_db), get_current_user: int = Depends(oauth2.get_current_user)):
     # cursor.execute(""" INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) """,
     #               (post.title, post.content, post.published))
     # new_post = cursor.fetchone()

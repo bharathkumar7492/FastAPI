@@ -2,6 +2,16 @@
 from jose import JWTError, jwt
 # Import datetime tools to set the JWT expiration time
 from datetime import datetime, timedelta
+from fastapi import Depends, status, HTTPException
+# Import OAuth2 authentication scheme
+from fastapi.security import OAuth2PasswordBearer
+
+import schemas
+
+
+# Tell FastAPI where the login endpoint is
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+
 
 
 # Secret key used to sign and verify the JWT
@@ -28,3 +38,37 @@ def create_access_token(data: dict):
     # Return the generated JWT
     return encoded_jwt
 
+
+
+# Verify the JWT token and get the user's ID from it
+def verify_access_token(token: str, credential_exception):
+
+    try:
+        # Decode the token and verify its signature and validity
+        payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
+        # Get the user ID stored inside the token
+        id: str = payload.get("user_id")
+
+        # If user ID is missing, raise authentication error
+        if id is None:
+            raise credential_exception
+
+        # Store the user ID in the TokenData schema
+        token_data = schemas.TokenData(id=id)
+
+    # If the token is invalid or expired, raise authentication error
+    except JWTError:
+        credential_exception
+
+
+
+# Get and verify the current user's JWT token
+def get_current_user(token: str = Depends(oauth2_scheme)):
+    
+    # Error to return when the token is invalid
+    credentials_exception = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, 
+                                          detail="Could not validate credentials", 
+                                          headers={"WWW-Authenticate": "Bearer"})
+    
+    # Verify the token and return the user information
+    return verify_access_token(token, credentials_exception)

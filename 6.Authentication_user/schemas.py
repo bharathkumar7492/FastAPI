@@ -48,8 +48,19 @@ class UserResponse(BaseModel):
         
 
 # Schema for validating user login credentials
-
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
     
+
+
+# Schema for the login response
+class Token(BaseModel):
+    access_token: str
+    token_type: str         # Type of token (usually "bearer")
+
+    
+
+# Schema for storing data extracted from the JWT
+class TokenData(BaseModel):
+    id: Optional[str] = None
