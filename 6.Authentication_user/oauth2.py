@@ -28,7 +28,7 @@ def create_access_token(data: dict):
     to_encode = data.copy()
     
     # Calculate the token expiration time
-    expire = datetime.now() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     # Add expiration time to the token data
     to_encode.update({"exp": expire})
     
@@ -45,7 +45,7 @@ def verify_access_token(token: str, credential_exception):
 
     try:
         # Decode the token and verify its signature and validity
-        payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         # Get the user ID stored inside the token
         id: str = payload.get("user_id")
 
@@ -60,6 +60,8 @@ def verify_access_token(token: str, credential_exception):
     except JWTError:
         credential_exception
 
+    # Return the validated token data
+    return token_data
 
 
 # Get and verify the current user's JWT token
