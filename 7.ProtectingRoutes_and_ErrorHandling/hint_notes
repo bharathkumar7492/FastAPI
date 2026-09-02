@@ -1,0 +1,25 @@
+
+# @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.PostResponse)
+# def create_posts(post: schemas.CreatePost, db: Session=Depends(get_db), user_id: int = Depends(oauth2.get_current_user)):
+ 
+'''Protecting Routes by :     user_id: int = Depends(oauth2.get_current_user)
+this forces users to have to be logged in before CREATE/ GET/ UPDATE/ DELETE post in post.py'''
+
+# note: user_id changed as current user
+# -------------------------------------------------------------------------
+
+
+
+
+
+# def get_current_user(token: str = Depends(oauth2_scheme), db: Session=Depends(database.get_db)):
+#     # Find the user in the database using the ID from the token
+#     user = db.query(models.User).filter(models.User.id == token.id).first()
+#     # Return the current user's database information
+#     return user
+
+''' Fetching User in Protected Routes: by inject database in get_current_user function &
+query to find the user from token in oauth2.py'''
+
+
+
