@@ -4,7 +4,7 @@
 # Import Base so this class can become a SQLAlchemy database model
 from database import Base
 # Import SQLAlchemy column types
-from sqlalchemy import Column, Integer, String, Boolean
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
 from sqlalchemy.sql.expression import text
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 
@@ -23,8 +23,9 @@ class Post(Base):
     
     # Store the date and time when the post is created
     created_at = Column(TIMESTAMP, nullable=False, server_default=text("CURRENT_TIMESTAMP"))
-    
-   
+    # Store the user ID and link it to the users table - FOREIGN KEY
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+
    
 # Create a User database model
 class User(Base):

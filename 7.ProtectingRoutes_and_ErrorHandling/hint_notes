@@ -23,3 +23,11 @@ query to find the user from token in oauth2.py'''
 
 
 
+# ----------------------------------------
+# SQLAlchemy Foreign Keys:  add foreign key in post table model
+
+""" 
+    # Store the user ID and link it to the users table - FOREIGN KEY
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False) """
+
+# now whenever we delete user from users table, it will automatically delete the posts create by that user

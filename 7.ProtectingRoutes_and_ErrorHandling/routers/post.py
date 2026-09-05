@@ -16,9 +16,6 @@ router = APIRouter(
 )
 
 
-# we prefix the path here, so in every path "/posts" is automatically added  no need to mention
-
-
 # GET ALL
 
 @router.get("/", response_model=list[schemas.PostResponse])

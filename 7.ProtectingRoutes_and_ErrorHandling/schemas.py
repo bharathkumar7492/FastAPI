@@ -20,6 +20,7 @@ class PostResponse(PostBase):
     # title, content, published columns will be inherits from PostBase class
     id: int
     created_at: datetime
+    user_id: int
     
     # Allow Pydantic to read data from SQLAlchemy model
     class config:
