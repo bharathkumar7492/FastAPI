@@ -27,6 +27,10 @@ def get_posts(db: Session=Depends(get_db), current_user: int = Depends(oauth2.ge
 
     # Query the Post table and get all posts
     posts = db.query(models.Post).all()
+    
+    '''for gets only users own posts'''
+    # posts = db.query(models.Post).filter(models.Post.user_id == current_user.id).all()
+    
     # Return all posts as the API response
     return posts
 
@@ -47,6 +51,14 @@ def get_post(id: int, db: Session=Depends(get_db), current_user: int = Depends(o
         # Stop the function and return 404 error
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                       detail= "post with id: {id} was not found")
+        
+    
+    '''for gets only users own posts'''
+    # if post.user_id != current_user.id:
+    #     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+    #                         detail="Not authorized to perform requested action")    
+        
+    
     return post
 
 
@@ -64,10 +76,10 @@ def create_posts(post: schemas.CreatePost, db: Session=Depends(get_db), current_
     
     
     
-    print(current_user.email)
-    # If the model has many fields(columns), use unpacking to avoid writing each field manually
-    # Convert Pydantic model to dictionary 
-    new_post = models.Post(**post.dict())
+    print(current_user.id)
+    
+    # Create a new post and assign it to the current user by Get the ID of the currently logged-in user
+    new_post = models.Post(user_id=current_user.id, **post.dict())
     
     # Add the new post to the database session
     db.add(new_post)
@@ -93,17 +105,24 @@ def delete_post(id: int, db: Session=Depends(get_db), current_user: int = Depend
     # connection.commit()
     
     
-    
     #  Find the post with the given ID
-    post = db.query(models.Post).filter(models.Post.id == id)
+    post_query = db.query(models.Post).filter(models.Post.id == id)
+    
+    # Get the actual post object
+    post = post_query.first()
     
     # Check if the post exists, if not return 404 error message
-    if post.first() == None:
+    if post == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"post with id: {id} does not exist")
+    
+    # Check if the current user owns the post
+    if post.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Not authorized to perform requested action")
         
     # Delete the matching post from the database
-    post.delete(synchronize_session=False)
+    post_query.delete(synchronize_session=False)
     
     # Save the delete operation permanently in the database
     db.commit()
@@ -139,6 +158,13 @@ def update_post(id: int, updated_post: schemas.CreatePost, db: Session=Depends(g
     if post == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"post with id: {id} does not exist" )
+        
+        
+    # Check if the current user owns the post
+    if post.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Not authorized to perform requested action")
+        
     
     # Update the post using the data received from the client
     post_query.update(updated_post.dict(), synchronize_session=False)

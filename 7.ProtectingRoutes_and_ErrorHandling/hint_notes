@@ -26,8 +26,29 @@ query to find the user from token in oauth2.py'''
 # ----------------------------------------
 # SQLAlchemy Foreign Keys:  add foreign key in post table model
 
-""" 
-    # Store the user ID and link it to the users table - FOREIGN KEY
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False) """
+# Store the user ID and link it to the users table - FOREIGN KEY
+#  user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
 
-# now whenever we delete user from users table, it will automatically delete the posts create by that user
+"""now whenever we delete user from users table, it will automatically delete the posts create by that user """
+# --------------------------------------------------------------------------------
+
+
+
+# Assigning Owner id when creating new post:
+
+# new_post = models.Post(user_id=current_user.id, **post.dict())
+
+""" user_id=current_user.id -> Get the ID of the currently logged-in user & assigned to post to 
+identify who create that post"""
+
+# ------------------------------------------------------------------------
+
+# Delete and Update only your own posts:
+
+#def delete_post(): / def update_post():
+    #  Check if the current user owns the post
+    # if post.user_id != current_user.id:
+    #     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+    #                         detail="Not authorized to perform requested action")
+
+""" Check if the current user owns the post: so users can delete/update only their own post """
