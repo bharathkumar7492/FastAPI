@@ -52,3 +52,16 @@ identify who create that post"""
     #                         detail="Not authorized to perform requested action")
 
 """ Check if the current user owns the post: so users can delete/update only their own post """
+
+
+# ------------------------------------------------------------------------------------------------------------
+
+# Query Parameters
+
+# def get_posts(db: Session=Depends(get_db), current_user: int = Depends(oauth2.get_current_user),
+#               limit: int=10, skip: int = 0, search: Optional[str] = ""):
+
+#     # Query the Post table and get all posts
+#     posts = db.query(models.Post).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
+
+""" here used query parameter in function definition(limit, skip, search) just like sql query """

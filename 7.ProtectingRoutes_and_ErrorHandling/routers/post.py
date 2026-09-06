@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from fastapi import FastAPI, Response, status, HTTPException, Depends, APIRouter
 # Import Session to work with the SQLAlchemy database session
 from sqlalchemy.orm import Session 
+from typing import Optional
 
 import models, schemas, oauth2
 from database import get_db
@@ -20,13 +21,15 @@ router = APIRouter(
 
 @router.get("/", response_model=list[schemas.PostResponse])
               # FastAPI gets a database session from get_db()
-def get_posts(db: Session=Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+def get_posts(db: Session=Depends(get_db), current_user: int = Depends(oauth2.get_current_user),
+              limit: int=10, skip: int = 0, search: Optional[str] = ""):
     # cursor.execute("""SELECT * FROM posts""")
     # posts = cursor.fetchall()
 
+    print(search)
 
     # Query the Post table and get all posts
-    posts = db.query(models.Post).all()
+    posts = db.query(models.Post).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
     
     '''for gets only users own posts'''
     # posts = db.query(models.Post).filter(models.Post.owner_id == current_user.id).all()
