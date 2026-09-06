@@ -7,6 +7,7 @@ from database import Base
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
 from sqlalchemy.sql.expression import text
 from sqlalchemy.sql.sqltypes import TIMESTAMP
+from sqlalchemy.orm import Relationship
 
 
 # Create a Post database model
@@ -24,7 +25,8 @@ class Post(Base):
     # Store the date and time when the post is created
     created_at = Column(TIMESTAMP, nullable=False, server_default=text("CURRENT_TIMESTAMP"))
     # Store the user ID and link it to the users table - FOREIGN KEY
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    owner_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    owner = Relationship("User")
 
    
 # Create a User database model

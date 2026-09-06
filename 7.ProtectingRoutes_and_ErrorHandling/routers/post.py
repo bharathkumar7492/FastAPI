@@ -29,7 +29,7 @@ def get_posts(db: Session=Depends(get_db), current_user: int = Depends(oauth2.ge
     posts = db.query(models.Post).all()
     
     '''for gets only users own posts'''
-    # posts = db.query(models.Post).filter(models.Post.user_id == current_user.id).all()
+    # posts = db.query(models.Post).filter(models.Post.owner_id == current_user.id).all()
     
     # Return all posts as the API response
     return posts
@@ -54,7 +54,7 @@ def get_post(id: int, db: Session=Depends(get_db), current_user: int = Depends(o
         
     
     '''for gets only users own posts'''
-    # if post.user_id != current_user.id:
+    # if post.owner_id != current_user.id:
     #     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
     #                         detail="Not authorized to perform requested action")    
         
@@ -79,7 +79,7 @@ def create_posts(post: schemas.CreatePost, db: Session=Depends(get_db), current_
     print(current_user.id)
     
     # Create a new post and assign it to the current user by Get the ID of the currently logged-in user
-    new_post = models.Post(user_id=current_user.id, **post.dict())
+    new_post = models.Post(owner_id=current_user.id, **post.dict())
     
     # Add the new post to the database session
     db.add(new_post)
@@ -117,7 +117,7 @@ def delete_post(id: int, db: Session=Depends(get_db), current_user: int = Depend
                             detail=f"post with id: {id} does not exist")
     
     # Check if the current user owns the post
-    if post.user_id != current_user.id:
+    if post.owner_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="Not authorized to perform requested action")
         
@@ -161,7 +161,7 @@ def update_post(id: int, updated_post: schemas.CreatePost, db: Session=Depends(g
         
         
     # Check if the current user owns the post
-    if post.user_id != current_user.id:
+    if post.owner_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="Not authorized to perform requested action")
         

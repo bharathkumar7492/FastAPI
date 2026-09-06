@@ -15,12 +15,26 @@ class CreatePost(PostBase):
     pass
 
 
+
+# schema used for user response
+class UserResponse(BaseModel):
+    id: int
+    email: EmailStr
+    created_at: datetime
+    
+    # Allow Pydantic to read data from SQLAlchemy model
+    class config:
+        orm_mode = True
+
+
+
 # Schema used for the API response
 class PostResponse(PostBase):
     # title, content, published columns will be inherits from PostBase class
     id: int
     created_at: datetime
-    user_id: int
+    owner_id: int
+    owner: UserResponse
     
     # Allow Pydantic to read data from SQLAlchemy model
     class config:
