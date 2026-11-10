@@ -1,26 +1,19 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>
-            {% if title %} FastAPI Blog-{{title}}
-            {% else %} FastAPI Blog
-            {% endif %}
-        </title>
-    </head>
+{# "extends" means inherit. It tells Jinja2 to use "base.html" as the parent template. #}
+{% extends "layout.html" %}
 
-    <body>
-        <h1>Home Page</h1>
-        
-        {% for post in posts %}
+
+{# This tells Jinja2 what content to insert into the parent's content block. #}
+{% block content %}
+
+    {# Contents #}
+    {% for post in posts %}
 
         <h3> {{ post.movie}} </h3>
         <p> {{ post.hero}} </p>
-        <p> {{ post.posted_date}} </p>
+        <p> {{ post.date_posted}} </p>
 
+    {% endfor %}
 
-        {% endfor %}
+{% endblock%}
         
-
         
-    </body>
-</html>

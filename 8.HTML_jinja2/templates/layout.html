@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>
+            {% if title %} FastAPI Blog-{{title}}
+            {% else %} FastAPI Blog
+            {% endif %}
+        </title>
+    </head>
+
+    <body>
+        <h1>Home Page</h1>
+        
+        {# This is an empty content area.Child templates can insert their own HTML inside this block. #} 
+        {% block content %}
+        {% endblock %}
+        
+    </body>
+</html>
